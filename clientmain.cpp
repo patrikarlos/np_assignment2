@@ -51,7 +51,7 @@ int main(int argc, char *argv[]){
   char recv_buf[BUFF_LEN];
   struct calcMessage calcMessage1 = {22,0,17,1,0};
 
-  printf("client send: %s\n", send_buf);
+  //printf("client send: %s\n", send_buf);
 
   send_num = sendto(sock_fd, (char *)&calcMessage1, sizeof(calcMessage1)+1, 0, (struct sockaddr *)&addr_serv, len); 
 
@@ -60,8 +60,10 @@ int main(int argc, char *argv[]){
     perror("sendto error:");  
     exit(1);  
   }  
+  printf("udp connection build\n");
 
-  recv_num = recvfrom(sock_fd, recv_buf, sizeof(recv_buf), 0, (struct sockaddr *)&addr_serv, (socklen_t *)&len); 
+  struct calcProtocol calcProtocol;
+  recv_num = recvfrom(sock_fd, (char*)&calcProtocol, sizeof(calcProtocol)+1, 0, (struct sockaddr *)&addr_serv, (socklen_t *)&len); 
 
   if(recv_num < 0)  
   {  
@@ -69,8 +71,37 @@ int main(int argc, char *argv[]){
     exit(1);  
   }  
 
+  switch (calcProtocol.arith)
+  {
+    case 1:
+      printf("Task:\n%d add %d\n",calcProtocol.inValue1,calcProtocol.inValue2);
+      break;
+    case 2:
+      printf("Task:\n%d sub %d\n",calcProtocol.inValue1,calcProtocol.inValue2);
+      break;
+    case 3:
+      printf("Task:\n%d mul %d\n",calcProtocol.inValue1,calcProtocol.inValue2);
+      break;
+    case 4:
+      printf("Task:\n%d div %d\n",calcProtocol.inValue1,calcProtocol.inValue2);
+      break;
+    case 5:
+      printf("Task:\n%f fadd %f\n",calcProtocol.flValue1,calcProtocol.flValue2);
+      break;
+    case 6:
+      printf("Task:\n%f fsub %f\n",calcProtocol.flValue1,calcProtocol.flValue2);
+      break;
+    case 7:
+      printf("Task:\n%f fmul %f\n",calcProtocol.flValue1,calcProtocol.flValue2);
+      break;
+    case 8:
+      printf("Task:\n%f fdiv %f\n",calcProtocol.flValue1,calcProtocol.flValue2);
+      break;
+  }
+  
+
   recv_buf[recv_num] = '\0';  
-  printf("client receive %d bytes: %s\n", recv_num, recv_buf);  
+  //printf("client receive %d bytes: %s\n", recv_num, recv_buf);  
     
   close(sock_fd);  
     

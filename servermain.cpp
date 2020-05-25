@@ -77,6 +77,7 @@ int main(int argc, char *argv[]){
   char recv_buf[BUFF_LEN];  
   struct sockaddr_in addr_client; 
   struct calcMessage calcMessage2; 
+  struct calcProtocol calcProtocol;
   
   while(1)  
   {  
@@ -97,16 +98,65 @@ int main(int argc, char *argv[]){
       printf("calcMessage from client:\n");
       printf("calcMessage type: %d, message: %d, protocal: %d, major_version: %d, minor_version: %d\n\n",
       calcMessage2.type,calcMessage2.message,calcMessage2.protocol,calcMessage2.major_version,calcMessage2.minor_version);
-      // recv_buf[recv_num] = '\0';  
-      // printf("server receive %d bytes: %s\n", recv_num, recv_buf);  
+      
+      /* Initialize the library, this is needed for this library. */
+      initCalcLib();
+      char *ptr;
+      ptr=randomType(); // Get a random arithemtic operator. 
 
-      // send_num = sendto(sock_fd, send_buf, recv_num, 0, (struct sockaddr *)&addr_client, len);  
+      double f1,f2,fresult;
+      int i1,i2,iresult;
+      
+
+      if(ptr[0]=='f'){
+        printf("Random create float\n");
+        f1=randomFloat();
+        f2=randomFloat(); 
+        calcProtocol.flValue1=f1;
+        calcProtocol.flValue2=f2;
+        if(strcmp(ptr,"fadd")==0){
+          fresult=f1+f2;
+          calcProtocol.arith=5;
+          } else if (strcmp(ptr, "fsub")==0){
+            fresult=f1-f2;
+            calcProtocol.arith=6;
+          } else if (strcmp(ptr, "fmul")==0){
+            fresult=f1*f2;
+            calcProtocol.arith=7;
+          } else if (strcmp(ptr, "fdiv")==0){
+            fresult=f1/f2;
+            calcProtocol.arith=8;
+          }
+      }else {
+        printf("Random create Int\n");
+        i1=randomInt();
+        i2=randomInt();
+        calcProtocol.inValue1=i1;
+        calcProtocol.inValue2=i2;
+        if(strcmp(ptr,"add")==0){
+          iresult=i1+i2;
+          calcProtocol.arith=1;
+        } else if (strcmp(ptr, "sub")==0){
+          iresult=i1-i2;
+          calcProtocol.arith=2;
+        } else if (strcmp(ptr, "mul")==0){
+          iresult=i1*i2;
+          calcProtocol.arith=3;
+        } else if (strcmp(ptr, "div")==0){
+          iresult=i1/i2;
+          calcProtocol.arith=4;
+        }
+      }
+
+
+      send_num = sendto(sock_fd, (char *)&calcProtocol, sizeof(calcProtocol), 0, (struct sockaddr *)&addr_client, len);  
         
-      // if(send_num < 0)  
-      // {  
-      //   perror("sendto error:");  
-      //   exit(1);  
-      // }  
+      if(send_num < 0)  
+      {  
+        perror("sendto error:");  
+        exit(1);  
+      } 
+
     }
   }  
     
