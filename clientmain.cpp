@@ -8,7 +8,9 @@
 #include <errno.h> 
 #include <netdb.h> 
 #include <stdarg.h> 
-#include <string.h> 
+#include <string.h>
+#include <iostream>
+
 /* You will to add includes here */
 
 
@@ -51,7 +53,6 @@ int main(int argc, char *argv[]){
   char recv_buf[BUFF_LEN];
   struct calcMessage calcMessage1 = {22,0,17,1,0};
 
-  //printf("client send: %s\n", send_buf);
 
   send_num = sendto(sock_fd, (char *)&calcMessage1, sizeof(calcMessage1)+1, 0, (struct sockaddr *)&addr_serv, len); 
 
@@ -99,10 +100,28 @@ int main(int argc, char *argv[]){
       break;
   }
   
+  int answer;
+  int calcType;
+  printf("type 1 for int and 2 for float calculation\n");
+  std::cin>>calcType;
+  printf("Plz type the answer:\n");
+  std::cin>>answer;
+  if (calcType==1)
+  {
+    calcProtocol.inResult = answer;
+  }
+  else if (calcType==2)
+  {
+    calcProtocol.flResult = answer;
+  }
+   
+  send_num = sendto(sock_fd, (char *)&calcProtocol, sizeof(calcProtocol)+1, 0, (struct sockaddr *)&addr_serv, len);
+  if(send_num < 0)  
+  {  
+    perror("sendto error:");  
+    exit(1);  
+  }  
 
-  recv_buf[recv_num] = '\0';  
-  //printf("client receive %d bytes: %s\n", recv_num, recv_buf);  
-    
   close(sock_fd);  
     
   return 0;  

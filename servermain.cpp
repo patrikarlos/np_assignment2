@@ -25,7 +25,7 @@ using namespace std;
 /* Needs to be global, to be rechable by callback and main */
 int loopCount=0;
 int terminate=0;
-
+int flag=0;
 
 /* Call back function, will be called when the SIGALRM is raised when the timer expires. */
 void checkJobbList(int signum){
@@ -78,6 +78,7 @@ int main(int argc, char *argv[]){
   struct sockaddr_in addr_client; 
   struct calcMessage calcMessage2; 
   struct calcProtocol calcProtocol;
+  struct calcProtocol calcProtocol_Res;
   
   while(1)  
   {  
@@ -94,6 +95,7 @@ int main(int argc, char *argv[]){
     }  
     else
     {
+      flag = 1;
       memcpy(&calcMessage2, recv_buf, sizeof(calcMessage2)+1);
       printf("calcMessage from client:\n");
       printf("calcMessage type: %d, message: %d, protocal: %d, major_version: %d, minor_version: %d\n\n",
@@ -155,8 +157,30 @@ int main(int argc, char *argv[]){
       {  
         perror("sendto error:");  
         exit(1);  
-      } 
+      }
 
+      recv_num = recvfrom(sock_fd, recv_buf, sizeof(recv_buf), 0, (struct sockaddr *)&addr_client, (socklen_t *)&len);
+      if(recv_num < 0)  
+      {  
+        perror("recvfrom error:");  
+      }  
+      memcpy(&calcProtocol_Res,recv_buf,sizeof(calcProtocol_Res));
+      if (calcProtocol_Res.arith>=1&&calcProtocol_Res.arith<=4)
+      {
+        if ((calcProtocol_Res.inResult-iresult)<=0.1)
+        {
+          printf("OK\n");
+        }
+        else printf("NOT OK\n");
+      }
+      else{
+        if (calcProtocol_Res.flResult-fresult<=1)
+        {
+          printf("OK\n");
+        }
+        else printf("NOT OK\n");
+        
+      }
     }
   }  
     
