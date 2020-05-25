@@ -9,6 +9,7 @@
 #include <netdb.h> 
 #include <stdarg.h> 
 #include <string.h> 
+#include <sys/time.h>
 /* You will to add includes here */
 
 
@@ -17,8 +18,28 @@
 
 #include "protocol.h"
 #define SERV_PORT   8000  
+#define BUFF_LEN 512
 
 using namespace std;
+
+/* Needs to be global, to be rechable by callback and main */
+int loopCount=0;
+int terminate=0;
+
+
+/* Call back function, will be called when the SIGALRM is raised when the timer expires. */
+void checkJobbList(int signum){
+  // As anybody can call the handler, its good coding to check the signal number that called it.
+
+  printf("Let me be, I want to sleep.\n");
+
+  if(loopCount>20){
+    printf("I had enough.\n");
+    terminate=1;
+  }
+  
+  return;
+}
 
 
 int main(int argc, char *argv[]){
@@ -52,35 +73,65 @@ int main(int argc, char *argv[]){
     
   int recv_num;  
   int send_num;  
-  char send_buf[20] = "i am server!";  
-  char recv_buf[20];  
-  struct sockaddr_in addr_client;  
+  char send_buf[BUFF_LEN];  
+  char recv_buf[BUFF_LEN];  
+  struct sockaddr_in addr_client; 
+  struct calcMessage calcMessage2; 
   
   while(1)  
   {  
     printf("server wait:\n");  
+    sleep(2);
       
     recv_num = recvfrom(sock_fd, recv_buf, sizeof(recv_buf), 0, (struct sockaddr *)&addr_client, (socklen_t *)&len);  
       
     if(recv_num < 0)  
     {  
       perror("recvfrom error:");  
-      exit(1);  
+      loopCount++;
+      printf("LoopCount: %d\n", loopCount);
     }  
-  
-    recv_buf[recv_num] = '\0';  
-    printf("server receive %d bytes: %s\n", recv_num, recv_buf);  
-  
-    send_num = sendto(sock_fd, send_buf, recv_num, 0, (struct sockaddr *)&addr_client, len);  
-      
-    if(send_num < 0)  
-    {  
-      perror("sendto error:");  
-      exit(1);  
-    }  
+    else
+    {
+      memcpy(&calcMessage2, recv_buf, sizeof(calcMessage2)+1);
+      printf("calcMessage from client:\n");
+      printf("calcMessage type: %d, message: %d, protocal: %d, major_version: %d, minor_version: %d\n\n",
+      calcMessage2.type,calcMessage2.message,calcMessage2.protocol,calcMessage2.major_version,calcMessage2.minor_version);
+      // recv_buf[recv_num] = '\0';  
+      // printf("server receive %d bytes: %s\n", recv_num, recv_buf);  
+
+      // send_num = sendto(sock_fd, send_buf, recv_num, 0, (struct sockaddr *)&addr_client, len);  
+        
+      // if(send_num < 0)  
+      // {  
+      //   perror("sendto error:");  
+      //   exit(1);  
+      // }  
+    }
   }  
     
   close(sock_fd);  
-    
+  
+   /* 
+     Prepare to setup a reoccurring event every 10s. If it_interval, or it_value is omitted, it will be a single alarm 10s after it has been set. 
+  */
+  struct itimerval alarmTime;
+  alarmTime.it_interval.tv_sec=10;
+  alarmTime.it_interval.tv_usec=10;
+  alarmTime.it_value.tv_sec=10;
+  alarmTime.it_value.tv_usec=10;
+
+  /* Regiter a callback function, associated with the SIGALRM signal, which will be raised when the alarm goes of */
+  signal(SIGALRM, checkJobbList);
+  setitimer(ITIMER_REAL,&alarmTime,NULL); // Start/register the alarm. 
+
+  
+  while(terminate==0){
+    printf("This is the main loop, %d time.\n",loopCount);
+    sleep(1);
+    loopCount++;
+  }
+
+  printf("done.\n");
   return 0;  
 }

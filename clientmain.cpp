@@ -20,6 +20,7 @@
 
 #define DEST_PORT 8000   
 #define DSET_IP_ADDRESS  "127.0.0.1" 
+#define BUFF_LEN 512
 
 int main(int argc, char *argv[]){
   
@@ -37,7 +38,7 @@ int main(int argc, char *argv[]){
 
   /* 设置address */  
   struct sockaddr_in addr_serv;  
-  int len;  
+  int len;
   memset(&addr_serv, 0, sizeof(addr_serv));  
   addr_serv.sin_family = AF_INET;  
   addr_serv.sin_addr.s_addr = inet_addr(DSET_IP_ADDRESS);  
@@ -46,12 +47,13 @@ int main(int argc, char *argv[]){
 
   int send_num;  
   int recv_num;  
-  char send_buf[20] = "hey, who are you?";  
-  char recv_buf[20];
+  char send_buf[BUFF_LEN];  
+  char recv_buf[BUFF_LEN];
+  struct calcMessage calcMessage1 = {22,0,17,1,0};
 
   printf("client send: %s\n", send_buf);
 
-  send_num = sendto(sock_fd, send_buf, strlen(send_buf), 0, (struct sockaddr *)&addr_serv, len); 
+  send_num = sendto(sock_fd, (char *)&calcMessage1, sizeof(calcMessage1)+1, 0, (struct sockaddr *)&addr_serv, len); 
 
   if(send_num < 0)  
   {  
